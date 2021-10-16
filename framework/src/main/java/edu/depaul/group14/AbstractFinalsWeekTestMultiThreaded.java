@@ -9,6 +9,15 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Abstract class that provides three basic stress test scenarios. Implement this class to stress test a class.
+ * This class is multi-threaded, and passes a "completion" token with each message. Each class under test must
+ * handle pairing the appropriate message to its completion token if it does not complete processing the message
+ * inside the {@link #sendMessage(Object, Object, Runnable)} call itself.
+ *
+ * @param <T> The class to be stress tested
+ * @param <M> The "message" type to send to the class
+ */
 public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
 
     public static final int BUSY_SOURCE_SEED = 0;

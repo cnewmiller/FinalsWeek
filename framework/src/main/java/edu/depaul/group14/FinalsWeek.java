@@ -1,5 +1,8 @@
 package edu.depaul.group14;
 
+/**
+ * Simple demo application that accepts homework and pretends to work before turning it in
+ */
 public class FinalsWeek {
 
     public static class Homework {
@@ -23,9 +26,5 @@ public class FinalsWeek {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        System.out.println("don't let me push");
     }
 }

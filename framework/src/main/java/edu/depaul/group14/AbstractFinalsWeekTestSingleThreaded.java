@@ -7,6 +7,13 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Abstract class that provides three basic stress test scenarios. Implement this class to stress test a class.
+ * This implementation is single-threaded, meaning the "end" of the processing time is when {@link #sendMessage(Object, Object)}
+ * returns. This also means that all messages are sent serially.
+ * @param <T> The class to be stress tested
+ * @param <M> The "message" type to send to the class
+ */
 public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
 
     public static final int BUSY_SOURCE_SEED = 0;
