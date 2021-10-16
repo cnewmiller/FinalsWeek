@@ -4,7 +4,7 @@ import java.util.Random;
 
 import edu.depaul.group14.FinalsWeek.Homework;
 
-public class ExampleFinalsWeekTest extends AbstractFinalsWeekTestSingleThreaded<FinalsWeek, Homework> {
+public class ExampleFinalsWeekTestMultiThreaded extends AbstractFinalsWeekTestMultiThreaded<FinalsWeek, Homework> {
 
     private static final Random RANDOM_SOURCE = new Random();
 
@@ -14,8 +14,9 @@ public class ExampleFinalsWeekTest extends AbstractFinalsWeekTestSingleThreaded<
     }
 
     @Override
-    protected void sendMessage(final FinalsWeek receiver, final Homework message) {
+    protected void sendMessage(final FinalsWeek receiver, final Homework message, final Runnable complete) {
         receiver.acceptHomework(message);
+        complete.run();
     }
 
     @Override
