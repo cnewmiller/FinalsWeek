@@ -3,6 +3,7 @@ package edu.depaul.group14;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
     private List<Long> finalsTest(T fixture) {
         List<Long> times = new ArrayList<>();
         for (int i = 0; i < testIterations(); i++) {
-            List<M> messages = IntStream.range(i, i + 10).mapToObj(this::initMessage).toList();
+            List<M> messages = IntStream.range(i, i + 10).mapToObj(this::initMessage).collect(Collectors.toList());
             final long start = System.currentTimeMillis();
             // Entrypoint into the app - TODO enable multithreading
             for(M message: messages) {
