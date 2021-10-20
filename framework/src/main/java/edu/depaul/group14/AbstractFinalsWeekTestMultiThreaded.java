@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
@@ -77,7 +78,7 @@ public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
         List<Long> times = new ArrayList<>();
         CountDownLatch finisher = new CountDownLatch(testIterations() * FINALS_MULTIPLIER);
         for (int i = 0; i < testIterations(); i++) {
-            List<M> messages = IntStream.range(i, i + FINALS_MULTIPLIER).mapToObj(this::initMessage).toList();
+            List<M> messages = IntStream.range(i, i + FINALS_MULTIPLIER).mapToObj(this::initMessage).collect(Collectors.toList());
             final long start = System.currentTimeMillis();
             for(M message: messages) {
                 CompletableFuture.runAsync(() -> {
