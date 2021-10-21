@@ -20,6 +20,7 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
     public static final int BUSY_SOURCE_SEED = 0;
     private final T fixture;
 
+
     public AbstractFinalsWeekTestSingleThreaded() {
         fixture = init();
     }
@@ -36,14 +37,9 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
 
     private List<Long> popularTest(T fixture) {
         List<Long> times = new ArrayList<>();
-        // int progressIteration = (int) (testIterations() / 100);
         for (int i = 0; i < testIterations(); i++) {
             final M uniqueMessage = initMessage(i);
-            final long start = System.currentTimeMillis();
-            // Entrypoint into the app - TODO enable multithreading
-            sendMessage(fixture, uniqueMessage);
-            final long end = System.currentTimeMillis();
-            times.add(end - start);
+            times = TestHelper(fixture,uniqueMessage);
         }
         return times;
     }
@@ -52,14 +48,11 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
         List<Long> times = new ArrayList<>();
         final M repeatedMessage = initMessage(BUSY_SOURCE_SEED);
         for (int i = 0; i < testIterations(); i++) {
-            final long start = System.currentTimeMillis();
-            // Entrypoint into the app - TODO enable multithreading
-            sendMessage(fixture, repeatedMessage);
-            final long end = System.currentTimeMillis();
-            times.add(end - start);
+            times = TestHelper(fixture,repeatedMessage);
         }
         return times;
     }
+
     private List<Long> finalsTest(T fixture) {
         List<Long> times = new ArrayList<>();
         for (int i = 0; i < testIterations(); i++) {
@@ -72,6 +65,15 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
             final long end = System.currentTimeMillis();
             times.add(end - start);
         }
+        return times;
+    }
+
+    public List<Long> TestHelper(T fixture, M message) {
+        List<Long> times = new ArrayList<>();
+            final long start = System.currentTimeMillis();
+            sendMessage(fixture, message);
+            final long end = System.currentTimeMillis();
+            times.add(end - start);
         return times;
     }
 
