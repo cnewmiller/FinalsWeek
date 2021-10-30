@@ -1,10 +1,11 @@
 package edu.depaul.group14;
 
+import java.util.Optional;
 import java.util.Random;
 
 import edu.depaul.group14.FinalsWeek.Homework;
 
-public class ExampleFinalsWeekTest extends AbstractFinalsWeekTestSingleThreaded<FinalsWeek, Homework> {
+public class ExampleFinalsWeekTest extends AbstractFinalsWeekTestSingleThreaded<FinalsWeek, Homework, Long> {
 
     private static final Random RANDOM_SOURCE = new Random();
 
@@ -14,8 +15,8 @@ public class ExampleFinalsWeekTest extends AbstractFinalsWeekTestSingleThreaded<
     }
 
     @Override
-    protected void sendMessage(final FinalsWeek receiver, final Homework message) {
-        receiver.acceptHomework(message);
+    protected Optional<Long> sendMessage(final FinalsWeek receiver, final Homework message) {
+        return Optional.of(receiver.acceptHomework(message));
     }
 
     @Override
