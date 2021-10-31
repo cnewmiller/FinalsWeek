@@ -2,24 +2,29 @@ package edu.depaul.group14;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
  * Abstract class that provides three basic stress test scenarios. Implement this class to stress test a class.
  * This class is multi-threaded, and passes a "completion" token with each message. Each class under test must
  * handle pairing the appropriate message to its completion token if it does not complete processing the message
- * inside the {@link #sendMessage(Object, Object, Runnable)} call itself.
+ * inside the {@link #sendMessage(Object, Object, Consumer)} call itself.
  *
  * @param <T> The class to be stress tested
  * @param <M> The "message" type to send to the class
  */
-public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
+public abstract class AbstractFinalsWeekTestMultiThreaded<T, M, O> {
 
     public static final int BUSY_SOURCE_SEED = 0;
     public static final int FINALS_MULTIPLIER = 10;
@@ -31,7 +36,12 @@ public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
 
     protected abstract T init();
 
-    protected abstract void sendMessage(T receiver, M message, Runnable complete);
+    protected abstract void sendMessage(T receiver, M message, Consumer<Optional<O>> complete);
+
+    protected boolean validateMessage(M message, O output) {
+        // no-op, override to implement validation
+        return true;
+    }
 
     protected abstract M initMessage(int sourceSeed);
 
@@ -42,18 +52,29 @@ public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
     private List<Long> popularTest(T fixture) throws InterruptedException {
         List<Long> times = new ArrayList<>();
         CountDownLatch finisher = new CountDownLatch(testIterations());
+        final Map<M, O> failures = new HashMap<>();
         for (int i = 0; i < testIterations(); i++) {
             final M uniqueMessage = initMessage(i);
             final long start = System.currentTimeMillis();
             CompletableFuture.runAsync(() -> {
-                sendMessage(fixture, uniqueMessage, () -> {
+                sendMessage(fixture, uniqueMessage, (passed) -> {
                     final long end = System.currentTimeMillis();
                     times.add(end - start);
+                    passed.ifPresent(o -> {
+                        try {
+                            if (!validateMessage(uniqueMessage, o)) {
+                                failures.put(uniqueMessage, o);
+                            }
+                        } catch (Throwable t) {
+                            failures.put(uniqueMessage, o);
+                        }
+                    });
                     finisher.countDown();
                 });
             });
         }
         finisher.await();
+        consumeFailures(failures);
         return times;
     }
 
@@ -61,36 +82,58 @@ public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
         List<Long> times = new ArrayList<>();
         final M repeatedMessage = initMessage(BUSY_SOURCE_SEED);
         CountDownLatch finisher = new CountDownLatch(testIterations());
+        final Map<M, O> failures = new HashMap<>();
         for (int i = 0; i < testIterations(); i++) {
             final long start = System.currentTimeMillis();
             CompletableFuture.runAsync(() -> {
-                sendMessage(fixture, repeatedMessage, () -> {
+                sendMessage(fixture, repeatedMessage, (passed) -> {
                     final long end = System.currentTimeMillis();
                     times.add(end - start);
+                    passed.ifPresent(o -> {
+                        try {
+                            if (!validateMessage(repeatedMessage, o)) {
+                                failures.put(repeatedMessage, o);
+                            }
+                        } catch (Throwable t) {
+                            failures.put(repeatedMessage, o);
+                        }
+                    });
                     finisher.countDown();
                 });
             });
         }
         finisher.await();
+        consumeFailures(failures);
         return times;
     }
     private List<Long> finalsTest(T fixture) throws InterruptedException {
         List<Long> times = new ArrayList<>();
         CountDownLatch finisher = new CountDownLatch(testIterations() * FINALS_MULTIPLIER);
+        final Map<M, O> failures = new HashMap<>();
         for (int i = 0; i < testIterations(); i++) {
             List<M> messages = IntStream.range(i, i + FINALS_MULTIPLIER).mapToObj(this::initMessage).collect(Collectors.toList());
             final long start = System.currentTimeMillis();
             for(M message: messages) {
                 CompletableFuture.runAsync(() -> {
-                    sendMessage(fixture, message, () -> {
+                    sendMessage(fixture, message, (passed) -> {
                         final long end = System.currentTimeMillis();
                         times.add(end - start);
+                        passed.ifPresent(o -> {
+                            try {
+                                if (!validateMessage(message, o)) {
+                                    failures.put(message, o);
+                                }
+                            } catch (Throwable t) {
+                                failures.put(message, o);
+                            }
+                        });
                         finisher.countDown();
                     });
                 });
             }
         }
         finisher.await();
+        consumeFailures(failures);
         return times;
     }
 
@@ -138,5 +181,15 @@ public abstract class AbstractFinalsWeekTestMultiThreaded<T, M> {
         System.out.println(String.format("  Min: %f", min));
         System.out.println(String.format("  Average: %f", average));
         System.out.println();
+    }
+
+    public void consumeFailures(final Map<M, O> failures) {
+        if (failures.isEmpty()) {
+            return;
+        }
+        failures.forEach((m, o) -> {
+            System.out.println(String.format("Failed Message: '%s', Failed output: '%s'", m, o));
+        });
+        Assertions.fail();
     }
 }

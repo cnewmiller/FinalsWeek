@@ -6,13 +6,17 @@ package edu.depaul.group14;
 public class FinalsWeek {
 
     public static class Homework {
-        private long num;
+        private final long num;
 
         public Homework(final long num) {
             this.num = num;
         }
-        public void doHomework() throws InterruptedException {
+        public long doHomework() throws InterruptedException {
             Thread.sleep(num);
+            return num;
+        }
+        public long getNum() {
+            return num;
         }
     }
 
@@ -20,11 +24,12 @@ public class FinalsWeek {
 
     }
 
-    public void acceptHomework(Homework homework) {
+    public long acceptHomework(Homework homework) {
         try {
-            homework.doHomework();
+            return homework.doHomework();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return -1L;
     }
 }

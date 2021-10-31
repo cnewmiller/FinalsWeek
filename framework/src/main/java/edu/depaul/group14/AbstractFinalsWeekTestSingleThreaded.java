@@ -2,10 +2,14 @@ package edu.depaul.group14;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -15,7 +19,7 @@ import org.junit.jupiter.api.Test;
  * @param <T> The class to be stress tested
  * @param <M> The "message" type to send to the class
  */
-public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
+public abstract class AbstractFinalsWeekTestSingleThreaded<T, M, O> {
 
     public static final int BUSY_SOURCE_SEED = 0;
     private final T fixture;
@@ -26,8 +30,12 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
 
     protected abstract T init();
 
-    protected abstract void sendMessage(T receiver, M message);
+    protected abstract Optional<O> sendMessage(T receiver, M message);
 
+    protected boolean validateMessage(M message, O output) {
+        // no-op, override to implement validation
+        return true;
+    }
     protected abstract M initMessage(int sourceSeed);
 
     protected long testIterations() {
@@ -36,42 +44,59 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
 
     private List<Long> popularTest(T fixture) {
         List<Long> times = new ArrayList<>();
-        // int progressIteration = (int) (testIterations() / 100);
+        Map<M, O> failures = new HashMap<>();
         for (int i = 0; i < testIterations(); i++) {
             final M uniqueMessage = initMessage(i);
             final long start = System.currentTimeMillis();
-            // Entrypoint into the app - TODO enable multithreading
-            sendMessage(fixture, uniqueMessage);
+            final Optional<O> output = sendMessage(fixture, uniqueMessage);
             final long end = System.currentTimeMillis();
             times.add(end - start);
+            output.ifPresent(o -> {
+                if (!validateMessage(uniqueMessage, o)) {
+                    failures.put(uniqueMessage, o);
+                }
+            });
         }
+        consumeFailures(failures);
         return times;
     }
 
     private List<Long> busyTest(T fixture) {
         List<Long> times = new ArrayList<>();
+        final Map<M, O> failures = new HashMap<>();
         final M repeatedMessage = initMessage(BUSY_SOURCE_SEED);
         for (int i = 0; i < testIterations(); i++) {
             final long start = System.currentTimeMillis();
-            // Entrypoint into the app - TODO enable multithreading
-            sendMessage(fixture, repeatedMessage);
+            final Optional<O> output = sendMessage(fixture, repeatedMessage);
             final long end = System.currentTimeMillis();
             times.add(end - start);
+            output.ifPresent(o -> {
+                if (!validateMessage(repeatedMessage, o)) {
+                    failures.put(repeatedMessage, o);
+                }
+            });
         }
+        consumeFailures(failures);
         return times;
     }
     private List<Long> finalsTest(T fixture) {
         List<Long> times = new ArrayList<>();
+        final HashMap<M, O> failures = new HashMap<>();
         for (int i = 0; i < testIterations(); i++) {
             List<M> messages = IntStream.range(i, i + 10).mapToObj(this::initMessage).collect(Collectors.toList());
-            final long start = System.currentTimeMillis();
-            // Entrypoint into the app - TODO enable multithreading
             for(M message: messages) {
-                sendMessage(fixture, message);
+                final long start = System.currentTimeMillis();
+                final Optional<O> output = sendMessage(fixture, message);
+                final long end = System.currentTimeMillis();
+                times.add(end - start);
+                output.ifPresent(o -> {
+                    if (!validateMessage(message, o)) {
+                        failures.put(message, o);
+                    }
+                });
             }
-            final long end = System.currentTimeMillis();
-            times.add(end - start);
         }
+        consumeFailures(failures);
         return times;
     }
 
@@ -119,6 +144,16 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
         System.out.println(String.format("  Min: %f", min));
         System.out.println(String.format("  Average: %f", average));
         System.out.println();
+    }
+
+    public void consumeFailures(final Map<M, O> failures) {
+        if (failures.isEmpty()) {
+            return;
+        }
+        failures.forEach((m, o) -> {
+            System.out.println(String.format("Failed Message: '%s', Failed output: '%s'", m, o));
+        });
+        Assertions.fail();
     }
 
 }
