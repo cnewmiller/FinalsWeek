@@ -39,7 +39,7 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
         List<Long> times = new ArrayList<>();
         for (int i = 0; i < testIterations(); i++) {
             final M uniqueMessage = initMessage(i);
-            times = TestHelper(fixture,uniqueMessage);
+            times.add(testHelper(fixture,uniqueMessage));
         }
         return times;
     }
@@ -48,7 +48,7 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
         List<Long> times = new ArrayList<>();
         final M repeatedMessage = initMessage(BUSY_SOURCE_SEED);
         for (int i = 0; i < testIterations(); i++) {
-            times = TestHelper(fixture,repeatedMessage);
+            times.add(testHelper(fixture,repeatedMessage));
         }
         return times;
     }
@@ -68,13 +68,11 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M> {
         return times;
     }
 
-    public List<Long> TestHelper(T fixture, M message) {
-        List<Long> times = new ArrayList<>();
+    public long testHelper(T fixture, M message) {
             final long start = System.currentTimeMillis();
             sendMessage(fixture, message);
             final long end = System.currentTimeMillis();
-            times.add(end - start);
-        return times;
+        return end - start;
     }
 
     @Test
