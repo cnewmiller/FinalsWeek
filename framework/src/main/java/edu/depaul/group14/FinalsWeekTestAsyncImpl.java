@@ -38,7 +38,7 @@ public class FinalsWeekTestAsyncImpl<T, M , O> implements FinalsWeekTest<M> {
                                                 final int testIterations,
                                                 final int messagesPerIteration) {
         List<Long> times = new ArrayList<>();
-        CountDownLatch finisher = new CountDownLatch(testIterations);
+        CountDownLatch finisher = new CountDownLatch(testIterations * messagesPerIteration);
         final Map<M, O> failures = new HashMap<>();
         final List<List<M>> toSend = new ArrayList<>();
         for (int i = 0; i < testIterations; i++) {
