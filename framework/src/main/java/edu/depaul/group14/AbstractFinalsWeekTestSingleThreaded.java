@@ -47,38 +47,34 @@ public abstract class AbstractFinalsWeekTestSingleThreaded<T, M, O> {
         Map<M, O> failures = new HashMap<>();
         for (int i = 0; i < testIterations(); i++) {
             final M uniqueMessage = initMessage(i);
-            final long start = System.currentTimeMillis();
-            final Optional<O> output = sendMessage(fixture, uniqueMessage);
-            final long end = System.currentTimeMillis();
-            times.add(end - start);
-            output.ifPresent(o -> {
-                if (!validateMessage(uniqueMessage, o)) {
-                    failures.put(uniqueMessage, o);
-                }
-            });
+            times.add(testHelper(fixture, uniqueMessage));
         }
         consumeFailures(failures);
         return times;
     }
-
     private List<Long> busyTest(T fixture) {
         List<Long> times = new ArrayList<>();
         final Map<M, O> failures = new HashMap<>();
         final M repeatedMessage = initMessage(BUSY_SOURCE_SEED);
         for (int i = 0; i < testIterations(); i++) {
-            final long start = System.currentTimeMillis();
-            final Optional<O> output = sendMessage(fixture, repeatedMessage);
-            final long end = System.currentTimeMillis();
-            times.add(end - start);
-            output.ifPresent(o -> {
-                if (!validateMessage(repeatedMessage, o)) {
-                    failures.put(repeatedMessage, o);
-                }
-            });
+            times.add(testHelper(fixture, repeatedMessage));
         }
         consumeFailures(failures);
         return times;
     }
+    public long testHelper(T fixture, M message) {
+        Map<M, O> failures = new HashMap<>();
+        final long start = System.currentTimeMillis();
+        final Optional<O> output = sendMessage(fixture, message);
+        final long end = System.currentTimeMillis();
+        output.ifPresent(o -> {
+            if (!validateMessage(message, o)) {
+                failures.put(message, o);
+            }
+        });
+        return end - start;
+    }
+
     private List<Long> finalsTest(T fixture) {
         List<Long> times = new ArrayList<>();
         final HashMap<M, O> failures = new HashMap<>();
