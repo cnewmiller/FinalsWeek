@@ -4,6 +4,8 @@ import edu.depaul.group14.core.FinalsWeekProvider;
 import java.util.Optional;
 import java.util.Random;
 import edu.depaul.group14.DataStructure.BST;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class BSTTest extends AbstractFinalsWeekTestRunner<BST, Integer, Boolean> {
@@ -28,7 +30,15 @@ public class BSTTest extends AbstractFinalsWeekTestRunner<BST, Integer, Boolean>
             }
         });
     }
+    @Test
+    public void test(){
+        BST<Integer> testTree;
+        testTree = new BST<Integer>( );
+        testTree.add(1);
+        testTree.add(3);
+        testTree.add(2);
+        testTree.add(4);
+        assertEquals(3,testTree.height());
+    }
+
 }
-
-
-
