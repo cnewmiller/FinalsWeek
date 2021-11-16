@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import edu.depaul.group14.core.FinalsWeekProvider;
 import edu.depaul.group14.core.FinalsWeekProviderAsync;
+import edu.depaul.group14.core.StatProcessor.Statistic;
 
 
 public abstract class AbstractFinalsWeekTestRunner<T, M, O> {
@@ -37,36 +38,21 @@ public abstract class AbstractFinalsWeekTestRunner<T, M, O> {
     @Test
     public void popular() {
         final M constantMessage = testDetails.initMessage(BUSY_SOURCE_SEED);
-        final List<Long> times = testDetails.testResponseTimes(i -> constantMessage, testIterations(), 1);
-        acceptStatistics(times);
-
+        final List<Statistic> times = testDetails.testResponseTimes(i -> constantMessage, testIterations(), 1);
+        testDetails.provideStatProcessor().consumeStatistics("popular", times);
     }
 
     @Test
     public void busy() {
-        final List<Long> times = testDetails.testResponseTimes(testDetails::initMessage, testIterations(), 1);
-        acceptStatistics(times);
-
+        final List<Statistic> times = testDetails.testResponseTimes(testDetails::initMessage, testIterations(), 1);
+        testDetails.provideStatProcessor().consumeStatistics("busy", times);
     }
 
     @Test
     public void finals() {
-        final List<Long> times = testDetails.testResponseTimes(testDetails::initMessage, testIterations(),
+        final List<Statistic> times = testDetails.testResponseTimes(testDetails::initMessage, testIterations(),
                                                                FINALS_MULTIPLIER);
-        acceptStatistics(times);
+        testDetails.provideStatProcessor().consumeStatistics("finals", times);
     }
-
-    public void acceptStatistics(List<Long> times) {
-
-        final double max = times.stream().mapToLong(l -> l).max().orElseThrow(IllegalStateException::new);
-        final double min = times.stream().mapToLong(l -> l).min().orElseThrow(IllegalStateException::new);
-        final double average = times.stream().mapToLong(l -> l).average().orElseThrow(IllegalStateException::new);
-
-        System.out.println(String.format("  Max: %f", max));
-        System.out.println(String.format("  Min: %f", min));
-        System.out.println(String.format("  Average: %f", average));
-        System.out.println();
-    }
-
 
 }
