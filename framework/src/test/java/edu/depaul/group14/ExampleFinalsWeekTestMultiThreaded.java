@@ -1,11 +1,13 @@
 package edu.depaul.group14;
 
+import java.io.File;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
 import edu.depaul.group14.FinalsWeek.Homework;
 import edu.depaul.group14.core.FinalsWeekProviderAsync;
+import edu.depaul.group14.core.StatProcessor;
 
 public class ExampleFinalsWeekTestMultiThreaded extends AbstractFinalsWeekTestRunner<FinalsWeek, Homework, Long> {
 
@@ -34,6 +36,11 @@ public class ExampleFinalsWeekTestMultiThreaded extends AbstractFinalsWeekTestRu
             @Override
             public Homework initMessage(final int sourceSeed) {
                 return new Homework(RANDOM_SOURCE.nextInt(10));
+            }
+
+            @Override
+            public StatProcessor provideStatProcessor() {
+                return new CsvStatProcessor(new File("build/test_output/multi").toPath());
             }
         });
     }
